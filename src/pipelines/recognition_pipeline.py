@@ -16,6 +16,7 @@ from src.cv.detection.detector import FaceDetector, DetectedFace, DetectionResul
 from src.cv.quality.checker import FaceQualityChecker, QualityStatus, QualityResult
 from src.cv.embeddings.extractor import FaceEmbedder, EmbeddingResult
 from src.cv.recognition.matcher import IdentityMatcher, MatchResult
+from src.antispoof.checker import LivenessChecker, SpoofStatus, LivenessResult
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,11 @@ class RecognitionResult:
     # Quality
     quality_status: QualityStatus = QualityStatus.NO_FACE
     quality_details: str = ""
+
+    # Liveness
+    liveness_status: SpoofStatus = SpoofStatus.UNCERTAIN
+    liveness_score: float = 0.0
+    liveness_details: str = ""
 
     # Embedding
     embedding: Optional[np.ndarray] = None
@@ -60,6 +66,9 @@ class RecognitionResult:
             "face_confidence": round(self.face_confidence, 3),
             "quality_status": self.quality_status.value if self.quality_status else None,
             "quality_details": self.quality_details,
+            "liveness_status": self.liveness_status.value if self.liveness_status else None,
+            "liveness_score": round(self.liveness_score, 3),
+            "liveness_details": self.liveness_details,
             "recognized": self.recognized,
             "identity": self.identity,
             "employee_id": self.employee_id,
@@ -77,13 +86,14 @@ class RecognitionPipeline:
     """
     End-to-end face recognition pipeline.
 
-    Chains detection → quality check → embedding → identity matching.
+    Chains detection -> quality check -> liveness -> embedding -> identity matching.
 
     Args:
         detector: Initialized FaceDetector.
         embedder: Initialized FaceEmbedder.
         matcher: IdentityMatcher with loaded gallery.
         quality_checker: FaceQualityChecker instance.
+        liveness_checker: Optional LivenessChecker instance.
     """
 
     def __init__(
@@ -92,18 +102,20 @@ class RecognitionPipeline:
         embedder: FaceEmbedder,
         matcher: IdentityMatcher,
         quality_checker: Optional[FaceQualityChecker] = None,
+        liveness_checker: Optional[LivenessChecker] = None,
     ):
         self.detector = detector
         self.embedder = embedder
         self.matcher = matcher
         self.quality_checker = quality_checker or FaceQualityChecker()
+        self.liveness_checker = liveness_checker or LivenessChecker()
 
     def process_frame(self, frame: np.ndarray) -> RecognitionResult:
         """
         Process a single BGR frame through the full recognition pipeline.
 
         Returns:
-            RecognitionResult with detection, quality, embedding, and matching info.
+            RecognitionResult with detection, quality, liveness, embedding, and matching info.
         """
         t_start = time.perf_counter()
         result = RecognitionResult()
@@ -137,8 +149,19 @@ class RecognitionPipeline:
         if quality.status != QualityStatus.VALID:
             result.total_latency_ms = (time.perf_counter() - t_start) * 1000
             return result
+            
+        # --- Step 3: Liveness Check ---
+        liveness = self.liveness_checker.analyze(best_face.face_crop)
+        result.liveness_status = liveness.status
+        result.liveness_score = liveness.liveness_score
+        result.liveness_details = liveness.details
+        
+        if liveness.status != SpoofStatus.LIVE:
+            logger.warning("Spoof detected! Score: %.3f - %s", liveness.liveness_score, liveness.details)
+            result.total_latency_ms = (time.perf_counter() - t_start) * 1000
+            return result
 
-        # --- Step 3: Embedding ---
+        # --- Step 4: Embedding ---
         t_emb = time.perf_counter()
         try:
             emb_result = self.embedder.extract(
@@ -209,6 +232,17 @@ class RecognitionPipeline:
             result.quality_details = quality.details
 
             if quality.status != QualityStatus.VALID:
+                result.total_latency_ms = (time.perf_counter() - t_start) * 1000
+                results.append(result)
+                continue
+                
+            # Liveness
+            liveness = self.liveness_checker.analyze(face.face_crop)
+            result.liveness_status = liveness.status
+            result.liveness_score = liveness.liveness_score
+            result.liveness_details = liveness.details
+            
+            if liveness.status != SpoofStatus.LIVE:
                 result.total_latency_ms = (time.perf_counter() - t_start) * 1000
                 results.append(result)
                 continue
