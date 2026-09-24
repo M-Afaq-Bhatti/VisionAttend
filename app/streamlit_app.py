@@ -1,37 +1,62 @@
+"""
+VisionAttend - Smart Workforce Attendance & Access Monitoring System
+Main Streamlit Application Entry Point.
+"""
+
 import streamlit as st
-import sys
 import os
 
-# Add project root to path so we can import src modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.config.settings import settings
-
+# Must be the first Streamlit command
 st.set_page_config(
     page_title="VisionAttend",
-    page_icon="🛡️",
+    page_icon="👁️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-st.title("🛡️ VisionAttend Dashboard")
-st.markdown("### Smart Workforce Attendance & Access Monitoring System")
+def main():
+    st.sidebar.title("👁️ VisionAttend")
+    st.sidebar.markdown("---")
+    st.sidebar.info(
+        "Welcome to the VisionAttend Admin Dashboard. "
+        "Please select a page from the navigation menu above."
+    )
 
-st.info(f"System running in DEMO_MODE: {settings.demo_mode}")
+    st.title("Welcome to VisionAttend")
+    st.markdown("""
+    ### Smart Workforce Attendance & Access Monitoring System
 
-st.sidebar.title("Navigation")
-st.sidebar.info("Select a page from the sidebar (pages will be implemented in Phase 6).")
+    This dashboard allows you to manage and monitor your workplace using advanced Computer Vision.
 
-# Placeholder for metrics
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("Total Employees", "0")
-with col2:
-    st.metric("Today's Check-ins", "0")
-with col3:
-    st.metric("Unknown Events", "0")
-with col4:
-    st.metric("Spoof Attempts", "0")
+    **Navigation:**
+    * 📷 **Live Monitor:** Start the webcam to actively recognize employees and log attendance.
+    * 👥 **Employee Management:** View enrolled employees and register new ones.
+    * 📊 **Attendance Logs:** View the history of check-ins and security alerts.
+    
+    👈 Select a page from the sidebar to get started.
+    """)
 
-st.write("---")
-st.write("Welcome to the VisionAttend MVP. Currently in development (Phase 2).")
+    # Show some quick stats
+    try:
+        from src.database.session import SessionLocal, init_db
+        from src.repositories.employee_repo import EmployeeRepository
+        from src.repositories.event_repo import AttendanceRepository
+        
+        # Ensure DB is initialized
+        init_db()
+        db = SessionLocal()
+        emp_repo = EmployeeRepository(db)
+        att_repo = AttendanceRepository(db)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Total Enrolled Employees", emp_repo.count())
+        with col2:
+            st.metric("Total Attendance Logs", att_repo.count())
+            
+        db.close()
+    except Exception as e:
+        st.warning(f"Could not load database statistics: {e}")
+
+if __name__ == "__main__":
+    main()
