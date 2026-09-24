@@ -151,7 +151,7 @@ class RecognitionPipeline:
             return result
             
         # --- Step 3: Liveness Check ---
-        liveness = self.liveness_checker.analyze(best_face.face_crop)
+        liveness = self.liveness_checker.analyze(best_face.face_crop, best_face.landmarks)
         result.liveness_status = liveness.status
         result.liveness_score = liveness.liveness_score
         result.liveness_details = liveness.details
@@ -237,7 +237,7 @@ class RecognitionPipeline:
                 continue
                 
             # Liveness
-            liveness = self.liveness_checker.analyze(face.face_crop)
+            liveness = self.liveness_checker.analyze(face.face_crop, face.landmarks)
             result.liveness_status = liveness.status
             result.liveness_score = liveness.liveness_score
             result.liveness_details = liveness.details
