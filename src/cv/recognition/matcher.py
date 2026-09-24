@@ -112,6 +112,50 @@ class IdentityMatcher:
             del self._gallery[k]
         return len(to_remove) > 0
 
+    def load_gallery(self, db) -> int:
+        """
+        Load all employee embeddings from disk into the gallery.
+
+        Reads the FaceProfile records from the database, then loads
+        the referenced .npz embedding files from disk.
+
+        Args:
+            db: SQLAlchemy Session.
+
+        Returns:
+            Number of employees loaded.
+        """
+        import os
+        from src.database.models import Employee, FaceProfile
+
+        self.clear_gallery()
+        profiles = db.query(FaceProfile).join(Employee).filter(
+            Employee.status == "active"
+        ).all()
+
+        loaded = 0
+        for profile in profiles:
+            emp = db.query(Employee).filter(Employee.id == profile.employee_id).first()
+            if emp is None:
+                continue
+
+            emb_path = profile.embedding_reference
+            if not os.path.exists(emb_path):
+                logger.warning("Embedding file not found: %s", emb_path)
+                continue
+
+            try:
+                data = np.load(emb_path)
+                embeddings = list(data["embeddings"])
+                self.register(emp.id, emp.employee_code, embeddings)
+                loaded += 1
+            except Exception as e:
+                logger.error("Failed to load embeddings for %s: %s", emp.employee_code, e)
+
+        logger.info("Gallery loaded: %d employees, %d total embeddings",
+                     loaded, self.total_embeddings)
+        return loaded
+
     def match(self, query_embedding: np.ndarray) -> MatchResult:
         """
         Match a query embedding against the gallery.

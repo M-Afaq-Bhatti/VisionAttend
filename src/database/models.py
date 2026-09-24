@@ -57,4 +57,6 @@ class SecurityEvent(Base):
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
     confidence = Column(Float, nullable=True)
     source = Column(String, nullable=True)
+    resolved = Column(Boolean, default=False)
     metadata_json = Column(String, nullable=True) # JSON string for extra info
+

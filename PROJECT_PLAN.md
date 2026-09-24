@@ -47,7 +47,7 @@ The system is divided into modular components:
 - [x] **PHASE 3**: Face Recognition (Detection, ArcFace embeddings, enrollment)
 - [x] **PHASE 4**: Anti-Spoofing (Liveness detection integration)
 - [x] **PHASE 5**: Attendance Engine (Rules, persistence, logging)
-- [ ] **PHASE 6**: Streamlit Dashboard (UI implementation, pages)
+- [x] **PHASE 6**: Streamlit Dashboard (UI implementation, pages)
 - [ ] **PHASE 7**: Evaluation (Evaluation scripts, metric reports)
 - [ ] **PHASE 8**: Polish (Refactoring, error handling, visual polish)
 - [ ] **PHASE 9**: Final Verification (End-to-end testing)

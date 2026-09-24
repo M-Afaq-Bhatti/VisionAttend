@@ -99,6 +99,19 @@ class AttendanceRepository:
             .count()
         )
 
+    def count(self) -> int:
+        """Total number of attendance events."""
+        return self.db.query(AttendanceEvent).count()
+
+    def get_recent(self, limit: int = 50) -> list[AttendanceEvent]:
+        """Get most recent attendance events."""
+        return (
+            self.db.query(AttendanceEvent)
+            .order_by(AttendanceEvent.timestamp.desc())
+            .limit(limit)
+            .all()
+        )
+
 
 class SecurityEventRepository:
     """CRUD operations for SecurityEvent records (unknown persons, spoof attempts)."""
@@ -162,3 +175,13 @@ class SecurityEventRepository:
         if event_type:
             query = query.filter(SecurityEvent.event_type == event_type)
         return query.count()
+
+    def get_recent(self, limit: int = 50) -> list[SecurityEvent]:
+        """Get most recent security events."""
+        return (
+            self.db.query(SecurityEvent)
+            .order_by(SecurityEvent.timestamp.desc())
+            .limit(limit)
+            .all()
+        )
+
