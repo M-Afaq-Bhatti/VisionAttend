@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     
     # CV config
     recognition_threshold: float = 0.45
-    liveness_threshold: float = 0.80
+    liveness_threshold: float = 0.50
     
     # Attendance rules
     attendance_cooldown_minutes: int = 5
