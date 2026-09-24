@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Datasets and Media
+data/raw/*
+data/processed/*
+data/enrollment/*
+data/evaluation/*
+!data/**/.gitkeep
+
+# Models
+*.onnx
+*.pt
+*.pth
+*.h5
+models/weights/*
+!models/**/.gitkeep
+
+# Logs and databases
+*.log
+*.sqlite
+*.sqlite3
+*.db
+reports/*
+!reports/.gitkeep
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# MacOS
+.DS_Store
