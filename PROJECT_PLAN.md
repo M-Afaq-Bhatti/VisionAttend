@@ -45,8 +45,8 @@ The system is divided into modular components:
 - [x] **PHASE 1**: Research & Planning
 - [x] **PHASE 2**: Environment & Skeleton (Virtual env, config, DB layer, basic Streamlit app)
 - [x] **PHASE 3**: Face Recognition (Detection, ArcFace embeddings, enrollment)
-- [ ] **PHASE 4**: Anti-Spoofing (Liveness detection integration)
-- [ ] **PHASE 5**: Attendance Engine (Rules, persistence, logging)
+- [x] **PHASE 4**: Anti-Spoofing (Liveness detection integration)
+- [x] **PHASE 5**: Attendance Engine (Rules, persistence, logging)
 - [ ] **PHASE 6**: Streamlit Dashboard (UI implementation, pages)
 - [ ] **PHASE 7**: Evaluation (Evaluation scripts, metric reports)
 - [ ] **PHASE 8**: Polish (Refactoring, error handling, visual polish)
